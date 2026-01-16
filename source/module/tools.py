@@ -13,6 +13,7 @@ def retry(function):
         if result := await function(self, *args, **kwargs):
             return result
         for __ in range(self.retry):
+            await sleep(uniform(0.5, 1.5))
             if result := await function(self, *args, **kwargs):
                 return result
         return result

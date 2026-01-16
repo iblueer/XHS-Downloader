@@ -26,7 +26,9 @@ from source.module import (
     ERROR,
     MASTER,
     REPOSITORY,
+    REPOSITORY,
     ROOT,
+    USERAGENT_MOBILE,
     VERSION_BETA,
     VERSION_MAJOR,
     VERSION_MINOR,
@@ -97,7 +99,7 @@ class XHS:
         user_agent: str = None,
         cookie: str = "",
         proxy: str | dict = None,
-        timeout=10,
+        timeout=30,
         chunk=1024 * 1024,
         max_retry=5,
         record_data=False,
@@ -284,6 +286,7 @@ class XHS:
                     u.group(),
                     False,
                     log,
+                    user_agent=USERAGENT_MOBILE,
                 )
             if u := self.SHARE.search(i):
                 urls.append(u.group())

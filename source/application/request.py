@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
-from httpx import HTTPError
-from httpx import get
+from curl_cffi.requests import RequestsError
 
 from ..module import ERROR, Manager, logging, retry, sleep_time
 from ..translation import _
@@ -37,6 +36,10 @@ class Html:
         headers = self.update_cookie(
             cookie,
         )
+        if ua := kwargs.pop("user_agent", None):
+            headers = headers | {"User-Agent": ua}
+        # print(f"DEBUG: kwargs keys after pop: {list(kwargs.keys())}")
+
         try:
             match bool(proxy):
                 case False:
@@ -60,7 +63,7 @@ class Html:
                     return response.text if content else str(response.url)
                 case _:
                     raise ValueError
-        except HTTPError as error:
+        except RequestsError as error:
             logging(
                 log, _("网络异常，{0} 请求失败: {1}").format(url, repr(error)), ERROR
             )
@@ -124,12 +127,9 @@ class Html:
         proxy: str,
         **kwargs,
     ):
-        return get(
+        return await self.client.get(
             url,
             headers=headers,
-            proxy=proxy,
-            follow_redirects=True,
-            verify=False,
-            timeout=self.timeout,
+            proxies={"http": proxy, "https": proxy},
             **kwargs,
         )

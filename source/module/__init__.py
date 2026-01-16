@@ -28,6 +28,7 @@ from .static import (
     HEADERS,
     PROJECT,
     USERAGENT,
+    USERAGENT_MOBILE,
     FILE_SIGNATURES,
     FILE_SIGNATURES_LENGTH,
     MAX_WORKERS,

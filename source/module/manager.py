@@ -2,6 +2,7 @@ from pathlib import Path
 from re import compile, sub
 from shutil import move, rmtree
 from os import utime
+from curl_cffi.requests import AsyncSession, RequestsError
 from httpx import (
     AsyncClient,
     AsyncHTTPTransport,
@@ -12,6 +13,7 @@ from httpx import (
 )
 
 from source.expansion import remove_empty_directories
+
 
 from ..translation import _
 from .static import HEADERS, USERAGENT, WARNING
@@ -98,18 +100,16 @@ class Manager:
             _print,
         )
         self.timeout = timeout
-        self.request_client = AsyncClient(
+        self.request_client = AsyncSession(
             headers=self.headers
             | {
                 "referer": "https://www.xiaohongshu.com/",
             },
             timeout=timeout,
             verify=False,
-            follow_redirects=True,
-            mounts={
-                "http://": AsyncHTTPTransport(proxy=self.proxy),
-                "https://": AsyncHTTPTransport(proxy=self.proxy),
-            },
+            allow_redirects=True,
+            impersonate="chrome120",
+            proxies={"http": self.proxy, "https": self.proxy} if self.proxy else None,
         )
         self.download_client = AsyncClient(
             headers=self.blank_headers,
@@ -121,6 +121,7 @@ class Manager:
                 "https://": AsyncHTTPTransport(proxy=self.proxy),
             },
         )
+
         self.image_download = self.check_bool(image_download, True)
         self.video_download = self.check_bool(video_download, True)
         self.live_download = self.check_bool(live_download, True)
@@ -200,7 +201,7 @@ class Manager:
         return value if isinstance(value, bool) else default
 
     async def close(self):
-        await self.request_client.aclose()
+        self.request_client.close()
         await self.download_client.aclose()
         # self.__clean()
         remove_empty_directories(self.root)
